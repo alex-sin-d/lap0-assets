@@ -330,9 +330,18 @@ Race.prototype.tick = function() {
 Race.prototype.applyChoice=function(choice){
   var b=(choice==='yes'?this.decision.yes:this.decision.no);
   var d=this.drivers[b.driver];
-  if(b.delta)for(var k in b.delta)d[k]+=b.delta[k];
-  if(b.random){var r=Math.random(),cum=0;for(var m=0;m<b.random.length;m++){cum+=b.random[m].p;if(r<cum){var rnd=b.random[m];for(k in rnd.delta)d[k]+=rnd.delta[k];this.banner=rnd.feedback;break;}}}
+  if(b.delta)for(var k in b.delta){
+    if(typeof d[k]==='number' && typeof b.delta[k]==='number')d[k]+=b.delta[k];
+    else d[k]=b.delta[k];
+  }
+  if(b.random){var r=Math.random(),cum=0;for(var m=0;m<b.random.length;m++){cum+=b.random[m].p;if(r<cum){var rnd=b.random[m];for(k in rnd.delta){
+        if(typeof d[k]==='number' && typeof rnd.delta[k]==='number')d[k]+=rnd.delta[k];
+        else d[k]=rnd.delta[k];
+      }this.banner=rnd.feedback;break;}}}
   if(b.extra)b.extra(d);
+  if(typeof d.tyreWear==='number')d.tyreWear=Math.max(0,Math.min(100,d.tyreWear));
+  if(typeof d.battery==='number')d.battery=Math.max(0,Math.min(100,d.battery));
+  if(typeof d.engine==='number')d.engine=Math.max(0,Math.min(100,d.engine));
   if(!b.random&&!b.extra)this.banner=b.feedback;
   this.decision=null; this.updatePositions();
 };
