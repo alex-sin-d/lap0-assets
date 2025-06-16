@@ -39,8 +39,6 @@ function Driver(name, plan) {
   this.twoStop   = plan.twoStop;
   this.pos       = STARTING_POSITIONS[name] || 1;
   this.tyreWear  = 0;    // 0–100 %
-  this.battery   = 50;   // 0–100 %
-  this.engine    = 100;  // 0–100 %
   this.totalTime = 0;    // seconds
   this.fastestLap = false;
   this.plannedPits = [];
@@ -49,9 +47,7 @@ function Driver(name, plan) {
 Driver.prototype.computeLapTime = function() {
   var base = 90;
   var wearPenalty = this.tyreWear / 20;
-  var batteryBonus = this.battery > 50 ? (this.battery - 50) / 50 * 1 : 0;
-  var enginePenalty = (100 - this.engine) / 50 * 2;
-  var lapTime = base + wearPenalty - batteryBonus + enginePenalty;
+  var lapTime = base + wearPenalty;
   this.totalTime += lapTime;
   return lapTime;
 };
@@ -87,15 +83,14 @@ var staticDecisions = [
     prompt: "Lap 3: DRS window opens—should Pierre push to overtake Norris down the long back straight?",
     bullets: [
       "+1 position on a clean pass",
-      "20% chance of front-wing damage (-8 km/h top speed)",
-      "DRS battery drained by 10%"
+      "20% chance of front-wing damage (-8 km/h top speed)"
     ],
     yes: { driver: 0, random: [
-      { p: 0.7, delta: { time: -2, pos: -1, battery: -10 }, feedback: { text: "Successful DRS pass!", positive: true } },
-      { p: 0.2, delta: { time: 5, engine: -5 }, feedback: { text: "Wing clipped—top speed reduced.", positive: false } },
+      { p: 0.7, delta: { time: -2, pos: -1 }, feedback: { text: "Successful DRS pass!", positive: true } },
+      { p: 0.2, delta: { time: 5 }, feedback: { text: "Wing clipped—top speed reduced.", positive: false } },
       { p: 0.1, delta: { time: 1 }, feedback: { text: "Missed the DRS window.", positive: false } }
     ] },
-    no: { driver: 0, delta: { time: 0,battery: 5, pos: 1 }, feedback: { text: "Conserved battery charge.", positive: true } }
+    no: { driver: 0, delta: { time: 0, pos: 1 }, feedback: { text: "Played it safe.", positive: true } }
   },
   {
     lap: 10,
@@ -105,7 +100,7 @@ var staticDecisions = [
       "Rejoin mid-pack as many others pit",
       "May need an extra stop later"
     ],
-    yes: { driver: 0, delta: { time: 20, tyreWear: -100, battery: 5, pos: -1 }, feedback: { text: "Pitted under SC; neutral result.", positive: true } },
+    yes: { driver: 0, delta: { time: 20, tyreWear: -100, pos: -1 }, feedback: { text: "Pitted under SC; neutral result.", positive: true } },
     no: { driver: 0, delta: { time: 0 }, delayed: { afterLaps: 5, delta: { pos: 2 } }, feedback: { text: "Stayed out; rivals on fresh rubber passed you.", positive: false } }
   },
   {
@@ -137,7 +132,7 @@ var staticDecisions = [
       "Engine suffers -5% from push",
       "Tyre wear +15% for next stint"
     ],
-    yes: { driver: 0, delta: { time: -1, pos: -1, battery: -5, tyreWear: 15 }, feedback: { text: "Overcut successful!", positive: true } },
+    yes: { driver: 0, delta: { time: -1, pos: -1, tyreWear: 15 }, feedback: { text: "Overcut successful!", positive: true } },
     no: { driver: 0, delta: { time: 0, pos: 1 }, feedback: { text: "Held position; engine preserved.", positive: true } }
   },
   {
@@ -157,7 +152,7 @@ var staticDecisions = [
       "Mediums: +0.6s/lap, may need late stop",
       "Hards: -1.2s/lap but likely one-stop"
     ],
-    yes: { driver: 1, delta: { time: 18, tyre: "medium", battery: 5, pos: -1 }, feedback: { text: "Switched to mediums.", positive: true } },
+    yes: { driver: 1, delta: { time: 18, tyre: "medium", pos: -1 }, feedback: { text: "Switched to mediums.", positive: true } },
     no: { driver: 1, delta: { time: 18, tyre: "hard", pos: 1 }, feedback: { text: "Switched to hards.", positive: true } }
   },
   {
@@ -200,7 +195,7 @@ var staticDecisions = [
       "Fresh softs +1s/lap to finish",
       "Drop 2 positions now"
     ],
-    yes: { driver: 0, delta: { time: 20, tyreWear: -100, battery: 5, pos: -1 }, feedback: { text: "SC second stop; net gain expected.", positive: true } },
+    yes: { driver: 0, delta: { time: 20, tyreWear: -100, pos: -1 }, feedback: { text: "SC second stop; net gain expected.", positive: true } },
     no: { driver: 0, delta: { time: 5, pos: 2 }, feedback: { text: "Stayed out; late tyre failure risk.", positive: false } }
   },
   {
@@ -313,13 +308,23 @@ function Race(driverNames, strategies) {
     if (lap1) drv.plannedPits.push(lap1);
     if (plan.twoStop && plan.tyres[2]) drv.plannedPits.push(lap1 + stintLen[plan.tyres[1]]);
     // inject planned-pits
-    for (var j=0;j<drv.plannedPits.length;j++) this.decisions.push({
-      lap: drv.plannedPits[j],
-      prompt: "Planned pit on lap " + drv.plannedPits[j] + " to switch to " + drv.plannedTyres[j] + "?",
-      bullets: ["Reset wear, 20s pit time","Sticks to plan"],
-      yes:{driver:i,extra:function(d){d.tyre=this.plannedTyres[j];d.tyreWear=0;},feedback:{text:"Planned stop executed.",positive:true}},
-      no:{driver:i,delta:{},feedback:{text:"Skipped planned stop.",positive:false}}
-    });
+    for (var j=0; j<drv.plannedPits.length; j++) {
+      var pitLap = drv.plannedPits[j];
+      var tyreForStop = drv.plannedTyres[j];
+      this.decisions.push({
+        lap: pitLap,
+        prompt: "Planned pit on lap " + pitLap + " to switch to " + tyreForStop + "?",
+        bullets: ["Reset wear, 20s pit time","Sticks to plan"],
+        yes:{
+          driver:i,
+          extra:(function(t){
+            return function(d){ d.tyre=t; d.tyreWear=0; };
+          })(tyreForStop),
+          feedback:{text:"Planned stop executed.",positive:true}
+        },
+        no:{driver:i,delta:{},feedback:{text:"Skipped planned stop.",positive:false}}
+      });
+    }
     drv.pos = STARTING_POSITIONS[name] || drv.pos;
     this.drivers.push(drv);
   }
@@ -349,42 +354,23 @@ Race.prototype.tick = function() {
 Race.prototype.applyChoice = function(choice) {
   var branch = this.decision[choice];
 
-  // Resolve random outcomes if present
   if (branch.random) {
     var r = Math.random();
     var acc = 0;
     for (var i = 0; i < branch.random.length; i++) {
       acc += branch.random[i].p;
-      if (r <= acc) {
-        branch = branch.random[i];
-        break;
-      }
+      if (r <= acc) { branch = branch.random[i]; break; }
     }
   }
 
   var driver = this.drivers[branch.driver];
-
-  // Apply delta values with simple clamping
-  var d = branch.delta || {};
-  if (d.time)       driver.totalTime += d.time;
-  if (d.totalTime === Infinity) driver.totalTime = Infinity;
-  if (d.pos)        driver.pos = Math.max(1, Math.min(this.drivers.length, driver.pos + d.pos));
-  if (d.tyre)       driver.tyre = d.tyre;
-  if (d.tyreWear)   driver.tyreWear = Math.max(0, driver.tyreWear + d.tyreWear);
-  if (d.battery)    driver.battery = Math.min(100, Math.max(0, driver.battery + d.battery));
-  if (d.engine)     driver.engine = Math.min(100, Math.max(0, driver.engine + d.engine));
-
-  // Extra callback
-  if (typeof branch.extra === 'function') branch.extra(driver);
-
-  // Re-sort by position and time
-  this.updatePositions();
-
-  // Feedback banner
-  this.bannerText     = branch.feedback.text;
-  this.bannerPositive = branch.feedback.positive !== false;
-  this.bannerTimer    = millis() + 2000;
-  this.decision       = null;
+  var delta = branch.delta || {};
+  driver.pos = Math.max(1, Math.min(this.drivers.length, driver.pos + (delta.pos || 0)));
+  this.drivers.sort(function(a, b){ return a.pos - b.pos; });
+  for (var j = 0; j < this.drivers.length; j++) this.drivers[j].pos = j + 1;
+  this.bannerText  = branch.feedback.text;
+  this.bannerTimer = millis() + 2000;
+  this.decision = null;
 };
 
 Race.prototype.updatePositions=function(){
@@ -420,11 +406,9 @@ var HUD=(function(){
       if(raceRef.decision)drawDecisionCard(raceRef.decision.prompt,raceRef.decision.bullets,width/2-300,80,600,300);
       textSize(24);textLeading(28);fill(255);
       var p=raceRef.drivers[0];textAlign(LEFT,BOTTOM);
-      var pb=typeof p.battery!=='undefined'?p.battery:p.energy;
-      text('P'+p.pos+': '+p.name+'\nTyre: '+p.tyre+' '+(100-p.tyreWear).toFixed(0)+'%\nBAT '+pb+'%  ENG '+p.engine+'%',20,height-20);
+      text("P"+p.pos+": "+p.name+"\nTyre: "+p.tyre+" "+(100-p.tyreWear).toFixed(0)+"%",20,height-20);
       var f=raceRef.drivers[1];textAlign(RIGHT,BOTTOM);
-      var fb=typeof f.battery!=='undefined'?f.battery:f.energy;
-      text('P'+f.pos+': '+f.name+'\nTyre: '+f.tyre+' '+(100-f.tyreWear).toFixed(0)+'%\nBAT '+fb+'%  ENG '+f.engine+'%',width-20,height-20);
+      text("P"+f.pos+": "+f.name+"\nTyre: "+f.tyre+" "+(100-f.tyreWear).toFixed(0)+"%",width-20,height-20);
     }
   };
 })();
@@ -438,8 +422,8 @@ function drawDecisionCard(prompt,bullets,x,y,w,h){
   var by=y+80;for(var i=0;i<bullets.length;i++){text('• '+bullets[i],x+40,by);by+=28;}
   btnW=130;btnH=50;
   yesX=x+(w/2-btnW-20);noX=x+(w/2+20);btnY=y+h-btnH-20;
-  fill('#FFD400');rect(yesX,btnY,btnW,btnH,8);fill('#1A1A1A');textAlign(CENTER,CENTER);text('YES',yesX+btnW/2,btnY+btnH/2);
-  fill('#E10600');rect(noX,btnY,btnW,btnH,8);fill('#FFF');text('NO',noX+btnW/2,btnY+btnH/2);
+  fill('#FFD400');rect(yesX,btnY,btnW,btnH,8);fill('#1A1A1A');textAlign(CENTER,CENTER);text('+',yesX+btnW/2,btnY+btnH/2);
+  fill('#E10600');rect(noX,btnY,btnW,btnH,8);fill('#FFF');text('-',noX+btnW/2,btnY+btnH/2);
 }
 
 function drawFeedbackCard(txt, positive) {
