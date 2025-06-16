@@ -19,6 +19,9 @@ let appClick, gmailClick, tabClick;
 let gmailPrompt = true;
 let stratTab = "driverInfo"; // default tab
 
+// YES/NO button metrics
+let yesX, noX, btnY, btnW, btnH;
+
 // driver arrays / strategy data
 var DRIVERS = ["PIERRE GASLY", "FRANCO COLAPINTO"];
 var activeDriver = 0; // 0 = Pierre first
@@ -190,11 +193,11 @@ function mousePressed() {
   
   if (gameState === "race" && race.decision) {
   // YES?
-  if (pointInRect(mouseX, mouseY, width/2 - 60, 60, 50, 30)) {
+  if (pointInRect(mouseX, mouseY, yesX, btnY, btnW, btnH)) {
     handleDecision("yes");
   }
   // NO?
-  else if (pointInRect(mouseX, mouseY, width/2 + 10, 60, 50, 30)) {
+  else if (pointInRect(mouseX, mouseY, noX, btnY, btnW, btnH)) {
     handleDecision("no");
   }
   return;  // swallow all other clicks until the decision is resolved

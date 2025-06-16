@@ -382,7 +382,8 @@ function drawDecisionCard(prompt,bullets,x,y,w,h){
   fill('#F5F5F5');stroke('#E10600');strokeWeight(3);rect(x,y,w,h,12);
   noStroke();fill('#1A1A1A');textAlign(LEFT,TOP);textLeading(22);text(prompt,x+20,y+20,w-40);
   var by=y+80;for(var i=0;i<bullets.length;i++){text('• '+bullets[i],x+40,by);by+=28;}
-  var btnW=130,btnH=50;var yesX=x+(w/2-btnW-20),noX=x+(w/2+20),btnY=y+h-btnH-20;
+  btnW=130;btnH=50;
+  yesX=x+(w/2-btnW-20);noX=x+(w/2+20);btnY=y+h-btnH-20;
   fill('#FFD400');rect(yesX,btnY,btnW,btnH,8);fill('#1A1A1A');textAlign(CENTER,CENTER);text('YES',yesX+btnW/2,btnY+btnH/2);
   fill('#E10600');rect(noX,btnY,btnW,btnH,8);fill('#FFF');text('NO',noX+btnW/2,btnY+btnH/2);
 }
