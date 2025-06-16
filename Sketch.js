@@ -169,21 +169,8 @@ function draw() {
 }
 
 function handleDecision(choice) {
-  var currentDriver = race.drivers[0]; // player controlled driver
-
-  if (choice === "yes") {
-    currentDriver.battery = Math.max(0, currentDriver.battery - 10);
-    currentDriver.pos -= 1; // moved up a spot
-    race.banner = "You pitted: -10 batt, +1 pos";
-  } else {
-    currentDriver.pos += 1; // lost a spot staying out
-    race.banner = "Stayed out: lost 1 position";
-  }
-
+  race.applyChoice(choice);
   race.bannerTimer = millis() + 2000;
-
-  race.decision  = null;
-  race.timeScale = 8;
 }
 
 // mouse controls
