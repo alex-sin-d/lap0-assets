@@ -282,6 +282,7 @@ function Race(strategies) {
   this.drivers = [];
   this.decision = null;
   this.banner = null;
+  this.bannerTimer = 0;
   this.decisions = staticDecisions.slice();
 
   for (var i = 0; i < DRIVERS.length; i++) {
@@ -364,7 +365,17 @@ var HUD=(function(){
       noStroke();fill(0,150);rect(0,0,width,height);
       textSize(18);fill(255);textAlign(RIGHT,TOP);
       text('Lap '+raceRef.lap+'/'+TOTAL_LAPS,width-20,10);
-      if(raceRef.banner)drawFeedbackCard(raceRef.banner.text,raceRef.banner.positive);
+      if(raceRef.banner){
+        if(millis() < raceRef.bannerTimer){
+          var bw=300,bh=40,bx=width/2-bw/2,by=20;
+          fill(50,180);noStroke();
+          rect(bx,by,bw,bh,8);
+          fill(255);textAlign(CENTER,CENTER);textSize(18);
+          text(raceRef.banner,bx+bw/2,by+bh/2);
+        }else{
+          raceRef.banner=null;
+        }
+      }
       if(raceRef.decision)drawDecisionCard(raceRef.decision.prompt,raceRef.decision.bullets,width/2-300,80,600,300);
       textSize(24);textLeading(28);fill(255);
       var p=raceRef.drivers[0];textAlign(LEFT,BOTTOM);

@@ -169,22 +169,21 @@ function draw() {
 }
 
 function handleDecision(choice) {
-  var type = race.decision;
+  var currentDriver = race.drivers[0]; // player controlled driver
 
-  // SAFETY CAR or RAIN pit decision
-  if (type === "scStart1" || type === "scStart2" || type === "rainPit") {
-    if (choice === "yes") {
-      // Pit both player cars
-      race.pit(race.findDriver("PIERRE GASLY"));
-      race.pit(race.findDriver("FRANCO COLAPINTO"));
-    }
+  if (choice === "yes") {
+    currentDriver.battery = Math.max(0, currentDriver.battery - 10);
+    currentDriver.pos -= 1; // moved up a spot
+    race.banner = "You pitted: -10 batt, +1 pos";
+  } else {
+    currentDriver.pos += 1; // lost a spot staying out
+    race.banner = "Stayed out: lost 1 position";
   }
 
-  // Clear the prompt and resume
-  race.decision    = null;
-  race.banner      = null;
-  race.bannerTimer = 0;
-  race.timeScale   = 8;
+  race.bannerTimer = millis() + 2000;
+
+  race.decision  = null;
+  race.timeScale = 8;
 }
 
 // mouse controls
