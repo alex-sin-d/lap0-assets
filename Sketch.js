@@ -13,8 +13,7 @@ let backButton;
 let driverStrat, qualiStrat, weatherStrat;
 let happyResult, sadResult; // result screens
 
-// sounds
-let appClick, gmailClick, tabClick;
+// sounds disabled (files missing)
 
 // helpers
 let gmailPrompt = true;
@@ -89,9 +88,6 @@ function preload() {
   happyResult = loadImage("happyResult.webp");
   sadResult = loadImage("sadResult.png");
 
-  appClick = loadSound("appclick.wav");
-  gmailClick = loadSound("gmailClick.wav");
-  tabClick = loadSound("tabClick.wav"); // new sound for tab switches
 }
 
 // intro video finished → desktop
@@ -196,13 +192,13 @@ function mousePressed() {
     const overGmail =
       mouseX > 136 && mouseX < 196 && mouseY > 112 && mouseY < 157;
     if (overGmail) {
-      appClick.play();
+      
       gameState = "email";
     }
     const overStrat =
       mouseX > 132 && mouseX < 178 && mouseY > 21 && mouseY < 64;
     if (overStrat) {
-      appClick.play();
+      
       gameState = "strategy";
     }
     return;
@@ -213,13 +209,13 @@ function mousePressed() {
     const overFlavio =
       mouseX > 212 && mouseX < 728 && mouseY > 181 && mouseY < 265;
     if (overFlavio) {
-      gmailClick.play();
+      
       gameState = "flavioEmail";
     }
     const overBackDesktop =
       mouseX > 15 && mouseX < 215 && mouseY > 430 && mouseY < 590;
     if (overBackDesktop) {
-      appClick.play();
+      
       gameState = "desktop";
       gmailPrompt = false;
     }
@@ -231,7 +227,7 @@ function mousePressed() {
     const overBack =
       mouseX > 75 && mouseX < 185 && mouseY > 460 && mouseY < 505;
     if (overBack) {
-      gmailClick.play();
+      
       gameState = "email";
       gmailPrompt = false;
     }
@@ -243,22 +239,22 @@ function mousePressed() {
     // --- Tabs ---
     if (pointInRect(mouseX, mouseY, 40, 10, 130, 30)) {
       stratTab = "driverInfo";
-      tabClick.play();
+      
       return;
     }
     if (pointInRect(mouseX, mouseY, 180, 10, 130, 30)) {
       stratTab = "track";
-      tabClick.play();
+      
       return;
     }
     if (pointInRect(mouseX, mouseY, 320, 10, 130, 30)) {
       stratTab = "weather";
-      tabClick.play();
+      
       return;
     }
     if (pointInRect(mouseX, mouseY, 460, 10, 130, 30)) {
       stratTab = "plan";
-      tabClick.play();
+      
       return;
     }
 
@@ -282,7 +278,7 @@ function mousePressed() {
             )
           ) {
             plan.tyres[c] = tyreList[r];
-            appClick.play();
+            
           }
         }
       }
@@ -299,7 +295,7 @@ function mousePressed() {
       ) {
         // only require *this* driver's first two tyres
         if (plan.tyres[0] && plan.tyres[1]) {
-          appClick.play();
+          
           if (activeDriver < DRIVERS.length - 1) {
             // move to next driver
             activeDriver++;
