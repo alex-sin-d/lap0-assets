@@ -351,10 +351,9 @@ Race.prototype.tick = function() {
 
 Race.prototype.applyChoice=function(choice){
   var branch = choice === 'yes' ? this.decision.yes : this.decision.no;
-  var driver = this.drivers[branch.driver];
   var selected = branch;
   var punishProb = 0;
-  if (Array.isArray(branch.random) && branch.random.length > 0) {
+  if (Array.isArray(branch.random) && branch.random.length) {
     for (var i=0;i<branch.random.length;i++) {
       var ro = branch.random[i];
       if (ro.feedback && ro.feedback.positive === false) punishProb += ro.p;
@@ -365,26 +364,16 @@ Race.prototype.applyChoice=function(choice){
       if (r < cum) { selected = branch.random[i]; break; }
     }
   }
-  var delta = selected.delta || {};
-  for (var k in delta) {
-    if (k === 'pos') continue;
-    if (k === 'time') {
-      driver.totalTime += delta.time;
-    } else if (typeof driver[k] === 'number' && typeof delta[k] === 'number') {
-      driver[k] += delta[k];
-    } else {
-      driver[k] = delta[k];
-    }
-  }
-  if (branch.extra) branch.extra(driver);
-  if (driver.totalTime < 0) driver.totalTime = 0;
-  if (typeof driver.battery === 'number') driver.battery = Math.min(100, Math.max(0, driver.battery));
-  if (typeof driver.energy === 'number') driver.energy = Math.min(100, Math.max(0, driver.energy));
-  if (typeof driver.tyreWear === 'number') driver.tyreWear = Math.min(100, Math.max(0, driver.tyreWear));
-  if (typeof driver.engine === 'number') driver.engine = Math.min(100, Math.max(0, driver.engine));
 
-  if (typeof delta.pos === 'number') driver.pos += delta.pos;
-  driver.pos = Math.max(1, Math.min(driver.pos, this.drivers.length));
+  var driversToShift = Array.isArray(branch.driver) ? branch.driver : [branch.driver];
+  for (i=0;i<driversToShift.length;i++) {
+    var idx = driversToShift[i];
+    var d = this.drivers[idx];
+    if (selected.delta && typeof selected.delta.pos === 'number') {
+      d.pos += selected.delta.pos;
+    }
+    d.pos = Math.max(1, Math.min(this.drivers.length, d.pos));
+  }
   this.drivers.sort(function(a,b){ return a.pos - b.pos; });
   this.drivers.forEach(function(d,i){ d.pos = i+1; });
 
