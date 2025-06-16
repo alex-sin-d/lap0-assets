@@ -347,48 +347,44 @@ Race.prototype.tick = function() {
 };
 
 Race.prototype.applyChoice=function(choice){
-  var branch = (choice==='yes'?this.decision.yes:this.decision.no);
+  const branch = choice==='yes' ? this.decision.yes : this.decision.no;
   var drv = this.drivers[branch.driver];
-  var outcome = null;
+  var selectedOutcome = branch;
   var punishProb = 0;
 
-  function applyDelta(delta){
-    if(!delta) return;
-    for(var k in delta){
-      if(typeof drv[k]==='number' && typeof delta[k]==='number') drv[k]+=delta[k];
-      else drv[k]=delta[k];
-    }
-  }
-
-  if(branch.random){
-    var r=Math.random(),cum=0;
+  if(Array.isArray(branch.random) && branch.random.length>0){
+    var r=Math.random(), cum=0;
     for(var i=0;i<branch.random.length;i++){
       var opt=branch.random[i];
       cum+=opt.p;
       if(opt.feedback && opt.feedback.positive===false) punishProb+=opt.p;
-      if(outcome===null && r<cum) outcome=opt;
+      if(selectedOutcome===branch && r<cum) selectedOutcome=opt;
     }
-    if(!outcome) outcome=branch.random[branch.random.length-1];
-    applyDelta(outcome.delta);
-    this.bannerText = outcome.feedback.text;
-    this.bannerPositive = outcome.feedback.positive;
-  } else {
-    applyDelta(branch.delta);
-    this.bannerText = branch.feedback.text;
-    this.bannerPositive = branch.feedback.positive;
+    if(selectedOutcome===branch) selectedOutcome=branch.random[branch.random.length-1];
+  }
+
+  var delta = selectedOutcome.delta || {};
+  for(var k in delta){
+    if(typeof drv[k]==='number' && typeof delta[k]==='number') drv[k]+=delta[k];
+    else drv[k]=delta[k];
   }
 
   if(branch.extra) branch.extra(drv);
 
   if(typeof drv.pos==='number') drv.pos=Math.max(1,Math.min(20,drv.pos));
-  if(typeof drv.tyreWear==='number') drv.tyreWear=Math.max(0,Math.min(100,drv.tyreWear));
   if(typeof drv.battery==='number') drv.battery=Math.max(0,Math.min(100,drv.battery));
+  if(typeof drv.energy==='number') drv.energy=Math.max(0,Math.min(100,drv.energy));
+  if(typeof drv.tyreWear==='number') drv.tyreWear=Math.max(0,Math.min(100,drv.tyreWear));
   if(typeof drv.engine==='number') drv.engine=Math.max(0,Math.min(100,drv.engine));
+  if(typeof drv.totalTime==='number') drv.totalTime=Math.max(0,drv.totalTime);
 
-  this.bannerPunishPct = Math.round(punishProb*100);
-  this.bannerTimer = millis() + 2000;
-  this.decision=null; 
   this.updatePositions();
+
+  this.bannerText = selectedOutcome.feedback.text;
+  this.bannerPositive = selectedOutcome.feedback.positive;
+  this.bannerPunishPct = Math.round(punishProb*100);
+  this.bannerTimer = millis()+2000;
+  this.decision = null;
 };
 
 Race.prototype.updatePositions=function(){
@@ -424,9 +420,11 @@ var HUD=(function(){
       if(raceRef.decision)drawDecisionCard(raceRef.decision.prompt,raceRef.decision.bullets,width/2-300,80,600,300);
       textSize(24);textLeading(28);fill(255);
       var p=raceRef.drivers[0];textAlign(LEFT,BOTTOM);
-      text(p.name+' (P'+p.pos+')\nTyre: '+p.tyre+' '+(100-p.tyreWear).toFixed(0)+'%\nBAT '+p.battery+'%  ENG '+p.engine+'%',20,height-20);
+      var pb=typeof p.battery!=='undefined'?p.battery:p.energy;
+      text('P'+p.pos+': '+p.name+'\nTyre: '+p.tyre+' '+(100-p.tyreWear).toFixed(0)+'%\nBAT '+pb+'%  ENG '+p.engine+'%',20,height-20);
       var f=raceRef.drivers[1];textAlign(RIGHT,BOTTOM);
-      text(f.name+' (P'+f.pos+')\nTyre: '+f.tyre+' '+(100-f.tyreWear).toFixed(0)+'%\nBAT '+f.battery+'%  ENG '+f.engine+'%',width-20,height-20);
+      var fb=typeof f.battery!=='undefined'?f.battery:f.energy;
+      text('P'+f.pos+': '+f.name+'\nTyre: '+f.tyre+' '+(100-f.tyreWear).toFixed(0)+'%\nBAT '+fb+'%  ENG '+f.engine+'%',width-20,height-20);
     }
   };
 })();
