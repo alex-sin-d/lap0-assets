@@ -281,9 +281,27 @@ function Race(strategies) {
   this.lap = 0;
   this.drivers = [];
   this.decision = null;
-  this.banner = null;
+  this.bannerText = null;
+  this.bannerPositive = true;
+  this.bannerPunishPct = 0;
   this.bannerTimer = 0;
   this.decisions = staticDecisions.slice();
+  for(var di=0;di<this.decisions.length;di++){
+    var dec=this.decisions[di];
+    ['yes','no'].forEach(function(br){
+      var b=dec[br];
+      if(b&&b.random){
+        var sum=0;
+        for(var ri=0;ri<b.random.length;ri++){
+          if(b.random[ri].feedback&&b.random[ri].feedback.positive===false){
+            b.random[ri].p+=0.1;
+          }
+          sum+=b.random[ri].p;
+        }
+        for(ri=0;ri<b.random.length;ri++) b.random[ri].p/=sum;
+      }
+    });
+  }
 
   for (var i = 0; i < DRIVERS.length; i++) {
     var name = DRIVERS[i];
@@ -329,22 +347,48 @@ Race.prototype.tick = function() {
 };
 
 Race.prototype.applyChoice=function(choice){
-  var b=(choice==='yes'?this.decision.yes:this.decision.no);
-  var d=this.drivers[b.driver];
-  if(b.delta)for(var k in b.delta){
-    if(typeof d[k]==='number' && typeof b.delta[k]==='number')d[k]+=b.delta[k];
-    else d[k]=b.delta[k];
+  var branch = (choice==='yes'?this.decision.yes:this.decision.no);
+  var drv = this.drivers[branch.driver];
+  var outcome = null;
+  var punishProb = 0;
+
+  function applyDelta(delta){
+    if(!delta) return;
+    for(var k in delta){
+      if(typeof drv[k]==='number' && typeof delta[k]==='number') drv[k]+=delta[k];
+      else drv[k]=delta[k];
+    }
   }
-  if(b.random){var r=Math.random(),cum=0;for(var m=0;m<b.random.length;m++){cum+=b.random[m].p;if(r<cum){var rnd=b.random[m];for(k in rnd.delta){
-        if(typeof d[k]==='number' && typeof rnd.delta[k]==='number')d[k]+=rnd.delta[k];
-        else d[k]=rnd.delta[k];
-      }this.banner=rnd.feedback;break;}}}
-  if(b.extra)b.extra(d);
-  if(typeof d.tyreWear==='number')d.tyreWear=Math.max(0,Math.min(100,d.tyreWear));
-  if(typeof d.battery==='number')d.battery=Math.max(0,Math.min(100,d.battery));
-  if(typeof d.engine==='number')d.engine=Math.max(0,Math.min(100,d.engine));
-  if(!b.random&&!b.extra)this.banner=b.feedback;
-  this.decision=null; this.updatePositions();
+
+  if(branch.random){
+    var r=Math.random(),cum=0;
+    for(var i=0;i<branch.random.length;i++){
+      var opt=branch.random[i];
+      cum+=opt.p;
+      if(opt.feedback && opt.feedback.positive===false) punishProb+=opt.p;
+      if(outcome===null && r<cum) outcome=opt;
+    }
+    if(!outcome) outcome=branch.random[branch.random.length-1];
+    applyDelta(outcome.delta);
+    this.bannerText = outcome.feedback.text;
+    this.bannerPositive = outcome.feedback.positive;
+  } else {
+    applyDelta(branch.delta);
+    this.bannerText = branch.feedback.text;
+    this.bannerPositive = branch.feedback.positive;
+  }
+
+  if(branch.extra) branch.extra(drv);
+
+  if(typeof drv.pos==='number') drv.pos=Math.max(1,Math.min(20,drv.pos));
+  if(typeof drv.tyreWear==='number') drv.tyreWear=Math.max(0,Math.min(100,drv.tyreWear));
+  if(typeof drv.battery==='number') drv.battery=Math.max(0,Math.min(100,drv.battery));
+  if(typeof drv.engine==='number') drv.engine=Math.max(0,Math.min(100,drv.engine));
+
+  this.bannerPunishPct = Math.round(punishProb*100);
+  this.bannerTimer = millis() + 2000;
+  this.decision=null; 
+  this.updatePositions();
 };
 
 Race.prototype.updatePositions=function(){
@@ -365,16 +409,17 @@ var HUD=(function(){
       noStroke();fill(0,150);rect(0,0,width,height);
       textSize(18);fill(255);textAlign(RIGHT,TOP);
       text('Lap '+raceRef.lap+'/'+TOTAL_LAPS,width-20,10);
-      if(raceRef.banner){
-        if(millis() < raceRef.bannerTimer){
-          var bw=300,bh=40,bx=width/2-bw/2,by=20;
-          fill(50,180);noStroke();
-          rect(bx,by,bw,bh,8);
-          fill(255);textAlign(CENTER,CENTER);textSize(18);
-          text(raceRef.banner,bx+bw/2,by+bh/2);
-        }else{
-          raceRef.banner=null;
-        }
+      if(raceRef.bannerText && millis() < raceRef.bannerTimer){
+        var bw=400,bh=60,bx=width/2-bw/2,by=20;
+        fill(0,180);noStroke();
+        rect(bx,by,bw,bh,8);
+        textAlign(CENTER,TOP);textSize(18);
+        fill(raceRef.bannerPositive?255:'#E10600');
+        text(raceRef.bannerText,width/2,by+20);
+        fill(255);
+        text('Punishment chance: '+raceRef.bannerPunishPct+'%',width/2,by+40);
+      } else {
+        raceRef.bannerText=null;
       }
       if(raceRef.decision)drawDecisionCard(raceRef.decision.prompt,raceRef.decision.bullets,width/2-300,80,600,300);
       textSize(24);textLeading(28);fill(255);

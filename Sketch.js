@@ -170,7 +170,6 @@ function draw() {
 
 function handleDecision(choice) {
   race.applyChoice(choice);
-  race.bannerTimer = millis() + 2000;
 }
 
 // mouse controls
