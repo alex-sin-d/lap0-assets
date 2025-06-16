@@ -80,10 +80,10 @@ var staticDecisions = [
       "Momentum boost for the next stint"
     ],
     yes: { driver: 0, random: [
-      { p: 0.7, delta: { pos: -2, tyreWear: 5 }, feedback: { text: "Clean pass! Gained 2 positions.", positive: true } },
-      { p: 0.3, delta: { pos: 4 }, feedback: { text: "Too tight—went wide and dropped 4 positions.", positive: false } }
+      { p: 0.7, delta: { time: -3, pos: -2, tyreWear: 5 }, feedback: { text: "Clean pass! Gained 2 positions.", positive: true } },
+      { p: 0.3, delta: { time: 5, pos: 4 }, feedback: { text: "Too tight—went wide and dropped 4 positions.", positive: false } }
     ] },
-    no: { driver: 0, delta: {}, feedback: { text: "Held position safely.", positive: true } }
+    no: { driver: 0, delta: { time: 0 }, feedback: { text: "Held position safely.", positive: true } }
   },
   {
     lap: 3,
@@ -94,11 +94,11 @@ var staticDecisions = [
       "DRS battery drained by 10%"
     ],
     yes: { driver: 0, random: [
-      { p: 0.7, delta: { pos: -1, battery: -10 }, feedback: { text: "Successful DRS pass!", positive: true } },
-      { p: 0.2, delta: { engine: -5 }, feedback: { text: "Wing clipped—top speed reduced.", positive: false } },
-      { p: 0.1, delta: {}, feedback: { text: "Missed the DRS window.", positive: false } }
+      { p: 0.7, delta: { time: -2, pos: -1, battery: -10 }, feedback: { text: "Successful DRS pass!", positive: true } },
+      { p: 0.2, delta: { time: 5, engine: -5 }, feedback: { text: "Wing clipped—top speed reduced.", positive: false } },
+      { p: 0.1, delta: { time: 1 }, feedback: { text: "Missed the DRS window.", positive: false } }
     ] },
-    no: { driver: 0, delta: { battery: 5 }, feedback: { text: "Conserved battery charge.", positive: true } }
+    no: { driver: 0, delta: { time: 0,battery: 5 }, feedback: { text: "Conserved battery charge.", positive: true } }
   },
   {
     lap: 10,
@@ -108,8 +108,8 @@ var staticDecisions = [
       "Rejoin mid-pack as many others pit",
       "May need an extra stop later"
     ],
-    yes: { driver: 0, delta: { tyreWear: -100, battery: 5 }, feedback: { text: "Pitted under SC; neutral result.", positive: true } },
-    no: { driver: 0, delta: {}, delayed: { afterLaps: 5, delta: { pos: 2 } }, feedback: { text: "Stayed out; rivals on fresh rubber passed you.", positive: false } }
+    yes: { driver: 0, delta: { time: 20, tyreWear: -100, battery: 5 }, feedback: { text: "Pitted under SC; neutral result.", positive: true } },
+    no: { driver: 0, delta: { time: 0 }, delayed: { afterLaps: 5, delta: { pos: 2 } }, feedback: { text: "Stayed out; rivals on fresh rubber passed you.", positive: false } }
   },
   {
     lap: 15,
@@ -119,8 +119,8 @@ var staticDecisions = [
       "Tyre wear rate ×2.5 afterwards",
       "Risk lock-ups under braking"
     ],
-    yes: { driver: 0, delta: { pos: -2, tyreWear: 15 }, feedback: { text: "Gained positions but tyres took a beating.", positive: true } },
-    no: { driver: 0, delta: {}, feedback: { text: "Conserved tyres for later stints.", positive: true } }
+    yes: { driver: 0, delta: { time: -2, pos: -2, tyreWear: 15 }, feedback: { text: "Gained positions but tyres took a beating.", positive: true } },
+    no: { driver: 0, delta: { time: 0 }, feedback: { text: "Conserved tyres for later stints.", positive: true } }
   },
   {
     lap: 18,
@@ -129,8 +129,8 @@ var staticDecisions = [
       "Lose 1 place now to reduce wear rate by 40% for 4 laps",
       "Stay aggressive and tyre wear increases sharply"
     ],
-    yes: { driver: 0, delta: { pos: 1 }, feedback: { text: "Cooled tyres; sacrificed one position.", positive: true } },
-    no: { driver: 0, delta: { tyreWear: 10 }, feedback: { text: "Tyres suffered heavy wear.", positive: false } }
+    yes: { driver: 0, delta: { time: 1, pos: 1 }, feedback: { text: "Cooled tyres; sacrificed one position.", positive: true } },
+    no: { driver: 0, delta: { time: 3, tyreWear: 10 }, feedback: { text: "Tyres suffered heavy wear.", positive: false } }
   },
   {
     lap: 26,
@@ -140,8 +140,8 @@ var staticDecisions = [
       "Engine suffers -5% from push",
       "Tyre wear +15% for next stint"
     ],
-    yes: { driver: 0, delta: { pos: -1, battery: -5, tyreWear: 15 }, feedback: { text: "Overcut successful!", positive: true } },
-    no: { driver: 0, delta: {}, feedback: { text: "Held position; engine preserved.", positive: true } }
+    yes: { driver: 0, delta: { time: -1, pos: -1, battery: -5, tyreWear: 15 }, feedback: { text: "Overcut successful!", positive: true } },
+    no: { driver: 0, delta: { time: 0 }, feedback: { text: "Held position; engine preserved.", positive: true } }
   },
   {
     lap: 28,
@@ -150,8 +150,8 @@ var staticDecisions = [
       "Most competitors will pit too",
       "Stay out on slicks risks a spin"
     ],
-    yes: { driver: 1, delta: { tyre: "intermediate", tyreWear: 0 }, feedback: { text: "Pitted for intermediates.", positive: true } },
-    no: { driver: 1, random: [ { p: 1, delta: { pos: 10 }, feedback: { text: "Spun out in rain—lost 10 places.", positive: false } } ] }
+    yes: { driver: 1, delta: { time: 20, tyre: "intermediate", tyreWear: 0 }, feedback: { text: "Pitted for intermediates.", positive: true } },
+    no: { driver: 1, random: [ { p: 1, delta: { time: 15, pos: 10 }, feedback: { text: "Spun out in rain—lost 10 places.", positive: false } } ] }
   },
   {
     lap: 31,
@@ -160,8 +160,8 @@ var staticDecisions = [
       "Mediums: +0.6s/lap, may need late stop",
       "Hards: -1.2s/lap but likely one-stop"
     ],
-    yes: { driver: 1, delta: { tyre: "medium", battery: 5 }, feedback: { text: "Switched to mediums.", positive: true } },
-    no: { driver: 1, delta: { tyre: "hard" }, feedback: { text: "Switched to hards.", positive: true } }
+    yes: { driver: 1, delta: { time: 18, tyre: "medium", battery: 5 }, feedback: { text: "Switched to mediums.", positive: true } },
+    no: { driver: 1, delta: { time: 18, tyre: "hard" }, feedback: { text: "Switched to hards.", positive: true } }
   },
   {
     lap: 33,
@@ -171,10 +171,10 @@ var staticDecisions = [
       "Alternatively, let the car through (-1 position)"
     ],
     yes: { driver: 0, random: [
-      { p: 0.4, delta: { tyreWear: 20 }, feedback: { text: "Locked up—tyres flat-spotted.", positive: false } },
-      { p: 0.6, delta: { pos: 1 }, feedback: { text: "Let through; tyres stayed clean.", positive: true } }
+      { p: 0.4, delta: { time: 4, tyreWear: 20 }, feedback: { text: "Locked up—tyres flat-spotted.", positive: false } },
+      { p: 0.6, delta: { time: 2, pos: 1 }, feedback: { text: "Let through; tyres stayed clean.", positive: true } }
     ] },
-    no: { driver: 0, delta: {}, feedback: { text: "Defended conservatively.", positive: true } }
+    no: { driver: 0, delta: { time: 0 }, feedback: { text: "Defended conservatively.", positive: true } }
   },
   {
     lap: 34,
@@ -183,8 +183,8 @@ var staticDecisions = [
       "-1 place now, +0.8s/lap next 4 laps",
       "Stay on inters and lap times suffer"
     ],
-    yes: { driver: 1, delta: { tyre: "soft", tyreWear: 0 }, feedback: { text: "Switched to slicks.", positive: true } },
-    no: { driver: 1, delta: {}, feedback: { text: "Stayed on inters; lost pace.", positive: false } }
+    yes: { driver: 1, delta: { time: 20, tyre: "soft", tyreWear: 0 }, feedback: { text: "Switched to slicks.", positive: true } },
+    no: { driver: 1, delta: { time: 4 }, feedback: { text: "Stayed on inters; lost pace.", positive: false } }
   },
   {
     lap: 38,
@@ -193,8 +193,8 @@ var staticDecisions = [
       "Pierre rejoining ahead (+2 places)",
       "Franco loses two spots"
     ],
-    yes: { driver: 1, delta: { pos: 2 }, feedback: { text: "Team orders executed; Pierre benefits.", positive: true } },
-    no: { driver: 1, delta: {}, feedback: { text: "No team orders; race status quo.", positive: true } }
+    yes: { driver: 1, delta: { time: 1, pos: 2 }, feedback: { text: "Team orders executed; Pierre benefits.", positive: true } },
+    no: { driver: 1, delta: { time: 0 }, feedback: { text: "No team orders; race status quo.", positive: true } }
   },
   {
     lap: 45,
@@ -203,8 +203,8 @@ var staticDecisions = [
       "Fresh softs +1s/lap to finish",
       "Drop 2 positions now"
     ],
-    yes: { driver: 0, delta: { tyreWear: -100, battery: 5 }, feedback: { text: "SC second stop; net gain expected.", positive: true } },
-    no: { driver: 0, delta: {}, feedback: { text: "Stayed out; late tyre failure risk.", positive: false } }
+    yes: { driver: 0, delta: { time: 20, tyreWear: -100, battery: 5 }, feedback: { text: "SC second stop; net gain expected.", positive: true } },
+    no: { driver: 0, delta: { time: 5 }, feedback: { text: "Stayed out; late tyre failure risk.", positive: false } }
   },
   {
     lap: 47,
@@ -213,8 +213,8 @@ var staticDecisions = [
       "Save ~11s vs green-flag stop",
       "Rejoin on fresh softs"
     ],
-    yes: { driver: 1, delta: { tyreWear: -100 }, feedback: { text: "VSC stop completed.", positive: true } },
-    no: { driver: 1, delta: {}, feedback: { text: "Skipped VSC stop; softs fading.", positive: false } }
+    yes: { driver: 1, delta: { time: 15, tyreWear: -100 }, feedback: { text: "VSC stop completed.", positive: true } },
+    no: { driver: 1, delta: { time: 5 }, feedback: { text: "Skipped VSC stop; softs fading.", positive: false } }
   },
   {
     lap: 49,
@@ -223,8 +223,8 @@ var staticDecisions = [
       "+3s/lap in heavy rain on inters",
       "40% spin chance if on slicks"
     ],
-    yes: { driver: 0, delta: { tyre: "intermediate", tyreWear: 0 }, feedback: { text: "Pitted for intermediates.", positive: true } },
-    no: { driver: 0, random: [ { p: 1, delta: { pos: 5 }, feedback: { text: "Spun in heavy spray.", positive: false } } ] }
+    yes: { driver: 0, delta: { time: 20, tyre: "intermediate", tyreWear: 0 }, feedback: { text: "Pitted for intermediates.", positive: true } },
+    no: { driver: 0, random: [ { p: 1, delta: { time: 15, pos: 5 }, feedback: { text: "Spun in heavy spray.", positive: false } } ] }
   },
   {
     lap: 53,
@@ -233,8 +233,8 @@ var staticDecisions = [
       "+25s pit penalty, safe finish",
       "15% puncture risk each lap"
     ],
-    yes: { driver: 1, delta: { totalTime: 25 }, feedback: { text: "Pit stop; finished safely.", positive: true } },
-    no: { driver: 1, random: [ { p: 0.15, delta: { totalTime: Infinity }, feedback: { text: "Punctured—race over.", positive: false } } ] }
+    yes: { driver: 1, delta: { time: 25, totalTime: 25 }, feedback: { text: "Pit stop; finished safely.", positive: true } },
+    no: { driver: 1, random: [ { p: 0.15, delta: { time: 0, totalTime: Infinity }, feedback: { text: "Punctured—race over.", positive: false } } ] }
   },
   {
     lap: 55,
@@ -243,8 +243,8 @@ var staticDecisions = [
       "+1 championship point",
       "Tyre wear +15%"
     ],
-    yes: { driver: 0, delta: { tyreWear: 15 }, feedback: { text: "Fastest lap achieved!", positive: true } },
-    no: { driver: 0, delta: {}, feedback: { text: "Tyres conserved; no point.", positive: true } }
+    yes: { driver: 0, delta: { time: -1, tyreWear: 15 }, feedback: { text: "Fastest lap achieved!", positive: true } },
+    no: { driver: 0, delta: { time: 0 }, feedback: { text: "Tyres conserved; no point.", positive: true } }
   },
   {
     lap: 57,
@@ -254,11 +254,11 @@ var staticDecisions = [
       "15% crash risk (DNF)"
     ],
     yes: { driver: 0, random: [
-      { p: 0.4, delta: { pos: -1 }, feedback: { text: "Dive successful!", positive: true } },
-      { p: 0.15, delta: { totalTime: Infinity }, feedback: { text: "Crash—race over.", positive: false } },
-      { p: 0.45, delta: {}, feedback: { text: "Attempt failed; held position.", positive: false } }
+      { p: 0.4, delta: { time: -1, pos: -1 }, feedback: { text: "Dive successful!", positive: true } },
+      { p: 0.15, delta: { time: 0, totalTime: Infinity }, feedback: { text: "Crash—race over.", positive: false } },
+      { p: 0.45, delta: { time: 2 }, feedback: { text: "Attempt failed; held position.", positive: false } }
     ] },
-    no: { driver: 0, delta: {}, feedback: { text: "Held position safely.", positive: true } }
+    no: { driver: 0, delta: { time: 0 }, feedback: { text: "Held position safely.", positive: true } }
   },
   {
     lap: 58,
@@ -268,10 +268,10 @@ var staticDecisions = [
       "25% engine blow-up risk"
     ],
     yes: { driver: 0, random: [
-      { p: 0.75, delta: {}, feedback: { text: "Aggressive finish—well done!", positive: true } },
-      { p: 0.25, delta: { totalTime: Infinity }, feedback: { text: "Engine blew—DNF!", positive: false } }
+      { p: 0.75, delta: { time: -1 }, feedback: { text: "Aggressive finish—well done!", positive: true } },
+      { p: 0.25, delta: { time: 0, totalTime: Infinity }, feedback: { text: "Engine blew—DNF!", positive: false } }
     ] },
-    no: { driver: 0, delta: {}, feedback: { text: "Safe finish; engine intact.", positive: true } }
+    no: { driver: 0, delta: { time: 0 }, feedback: { text: "Safe finish; engine intact.", positive: true } }
   }
 ];
 /* -----------------------------------------------------------
@@ -347,43 +347,43 @@ Race.prototype.tick = function() {
 };
 
 Race.prototype.applyChoice=function(choice){
-  const branch = choice==='yes' ? this.decision.yes : this.decision.no;
-  var drv = this.drivers[branch.driver];
+  var branch = choice === 'yes' ? this.decision.yes : this.decision.no;
+  var driver = this.drivers[branch.driver];
   var selectedOutcome = branch;
   var punishProb = 0;
-
-  if(Array.isArray(branch.random) && branch.random.length>0){
-    var r=Math.random(), cum=0;
-    for(var i=0;i<branch.random.length;i++){
-      var opt=branch.random[i];
-      cum+=opt.p;
-      if(opt.feedback && opt.feedback.positive===false) punishProb+=opt.p;
-      if(selectedOutcome===branch && r<cum) selectedOutcome=opt;
+  if (Array.isArray(branch.random) && branch.random.length > 0) {
+    for (var i = 0; i < branch.random.length; i++) {
+      var ro = branch.random[i];
+      if (ro.feedback && ro.feedback.positive === false) punishProb += ro.p;
     }
-    if(selectedOutcome===branch) selectedOutcome=branch.random[branch.random.length-1];
+    var r = Math.random();
+    var cum = 0;
+    for (i = 0; i < branch.random.length; i++) {
+      cum += branch.random[i].p;
+      if (r < cum) { selectedOutcome = branch.random[i]; break; }
+    }
   }
-
   var delta = selectedOutcome.delta || {};
-  for(var k in delta){
-    if(typeof drv[k]==='number' && typeof delta[k]==='number') drv[k]+=delta[k];
-    else drv[k]=delta[k];
+  for (var k in delta) {
+    if (k === "time") {
+      driver.totalTime += delta.time;
+    } else if (typeof driver[k] === "number" && typeof delta[k] === "number") {
+      driver[k] += delta[k];
+    } else {
+      driver[k] = delta[k];
+    }
   }
-
-  if(branch.extra) branch.extra(drv);
-
-  if(typeof drv.pos==='number') drv.pos=Math.max(1,Math.min(20,drv.pos));
-  if(typeof drv.battery==='number') drv.battery=Math.max(0,Math.min(100,drv.battery));
-  if(typeof drv.energy==='number') drv.energy=Math.max(0,Math.min(100,drv.energy));
-  if(typeof drv.tyreWear==='number') drv.tyreWear=Math.max(0,Math.min(100,drv.tyreWear));
-  if(typeof drv.engine==='number') drv.engine=Math.max(0,Math.min(100,drv.engine));
-  if(typeof drv.totalTime==='number') drv.totalTime=Math.max(0,drv.totalTime);
-
+  if (branch.extra) branch.extra(driver);
+  if (driver.totalTime < 0) driver.totalTime = 0;
+  if (typeof driver.battery === "number") driver.battery = Math.min(100, Math.max(0, driver.battery));
+  if (typeof driver.energy === "number") driver.energy = Math.min(100, Math.max(0, driver.energy));
+  if (typeof driver.tyreWear === "number") driver.tyreWear = Math.min(100, Math.max(0, driver.tyreWear));
+  if (typeof driver.engine === "number") driver.engine = Math.min(100, Math.max(0, driver.engine));
   this.updatePositions();
-
   this.bannerText = selectedOutcome.feedback.text;
   this.bannerPositive = selectedOutcome.feedback.positive;
-  this.bannerPunishPct = Math.round(punishProb*100);
-  this.bannerTimer = millis()+2000;
+  this.bannerPunishPct = Math.round(punishProb * 100);
+  this.bannerTimer = millis() + 2000;
   this.decision = null;
 };
 
