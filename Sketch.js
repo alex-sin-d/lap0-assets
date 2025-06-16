@@ -19,9 +19,6 @@ let appClick, gmailClick, tabClick;
 let gmailPrompt = true;
 let stratTab = "driverInfo"; // default tab
 
-// YES/NO button metrics
-let yesX, noX, btnY, btnW, btnH;
-
 // driver arrays / strategy data
 var DRIVERS = ["PIERRE GASLY", "FRANCO COLAPINTO"];
 var activeDriver = 0; // 0 = Pierre first
@@ -155,38 +152,18 @@ function draw() {
     drawStrategyUI();
     noCursor();
     image(mouseCursor, mouseX, mouseY, 30, 30);
-  } else if (gameState === "race") {
-    
-  if (race) {
-    race.tick(millis());
-    HUD.draw();
-  image(mouseCursor, mouseX, mouseY, 30, 30);
-  }
-
   } else if (gameState === "result") {
-    // result screen coming soon
+    const res = resultScenarios[race.strategyKey];
+    textSize(24);
+    fill(255);
+    text(`Pierre Gasly: P${res.gasly}`,        width/2, height/2 - 20);
+    text(`Franco Colapinto: P${res.colapinto}`, width/2, height/2 + 20);
   }
-}
-
-function handleDecision(choice) {
-  race.applyChoice(choice);
 }
 
 // mouse controls
 function mousePressed() {
   console.log("mousePressed at", mouseX, mouseY, "state:", gameState);
-  
-  if (gameState === "race" && race.decision) {
-  // YES?
-  if (pointInRect(mouseX, mouseY, yesX, btnY, btnW, btnH)) {
-    handleDecision("yes");
-  }
-  // NO?
-  else if (pointInRect(mouseX, mouseY, noX, btnY, btnW, btnH)) {
-    handleDecision("no");
-  }
-  return;  // swallow all other clicks until the decision is resolved
-}
 
   // title to the intro
   if (gameState === "titleScreen") {
@@ -308,10 +285,13 @@ function mousePressed() {
             // move to next driver
             activeDriver++;
           } else {
-            // last driver → launch the race
-            race = new Race(DRIVERS, customStrategies);
-            HUD.init(race);
-            gameState = "race";
+            // last driver → show results based on strategy
+            let gp = driverPlans[0];
+            let key = gp.twoStop
+              ? `${gp.tyres[0]}-${gp.tyres[1]}-${gp.tyres[2]}`
+              : `${gp.tyres[0]}-${gp.tyres[1]}`;
+            race = { strategyKey: key };
+            gameState = "result";
           }
         }
       }
