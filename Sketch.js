@@ -309,7 +309,7 @@ function mousePressed() {
             activeDriver++;
           } else {
             // last driver → launch the race
-            race = new Race(customStrategies);
+            race = new Race(DRIVERS, customStrategies);
             HUD.init(race);
             gameState = "race";
           }
