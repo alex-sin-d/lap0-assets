@@ -2,7 +2,7 @@
 //  LAP‑0  –  STRATEGY CENTER (race.js) v1.0
 //  Plain ES5 (no arrow functions). Load BEFORE sketch.js.
 //  Exposes:
-//    • Race(strategies)   – constructor(runnerStrategies) with methods:
+//    • Race(driverNames, strategies)   – constructor(nameArray, strategyMap) with methods:
 //        - tick()        : advance simulation & handle decisions
 //        - applyChoice(c): apply last YES/NO choice
 //        - findDriver(n) : lookup index by driver name
@@ -277,7 +277,7 @@ var staticDecisions = [
 /* -----------------------------------------------------------
    RACE ENGINE
 ----------------------------------------------------------- */
-function Race(strategies) {
+function Race(driverNames, strategies) {
   this.lap = 0;
   this.drivers = [];
   this.decision = null;
@@ -303,8 +303,8 @@ function Race(strategies) {
     });
   }
 
-  for (var i = 0; i < DRIVERS.length; i++) {
-    var name = DRIVERS[i];
+  for (var i = 0; i < driverNames.length; i++) {
+    var name = driverNames[i];
     var plan = strategies[name] || { tyres:["soft","medium",null], twoStop:false };
     var drv = new Driver(name, plan);
     drv.plannedTyres = plan.tyres.slice(1);
