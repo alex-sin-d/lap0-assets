@@ -346,37 +346,13 @@ Race.prototype.tick = function() {
   this.updatePositions();
 };
 
-Race.prototype.applyChoice=function(choice){
-  var branch = choice === 'yes' ? this.decision.yes : this.decision.no;
-  var selected = branch;
-  var punishProb = 0;
-  if (Array.isArray(branch.random) && branch.random.length) {
-    for (var i=0;i<branch.random.length;i++) {
-      var ro = branch.random[i];
-      if (ro.feedback && ro.feedback.positive === false) punishProb += ro.p;
-    }
-    var r = Math.random(), cum = 0;
-    for (i=0;i<branch.random.length;i++) {
-      cum += branch.random[i].p;
-      if (r < cum) { selected = branch.random[i]; break; }
-    }
-  }
-
-  var driversToShift = Array.isArray(branch.driver) ? branch.driver : [branch.driver];
-  for (i=0;i<driversToShift.length;i++) {
-    var idx = driversToShift[i];
-    var d = this.drivers[idx];
-    if (selected.delta && typeof selected.delta.pos === 'number') {
-      d.pos += selected.delta.pos;
-    }
-    d.pos = Math.max(1, Math.min(this.drivers.length, d.pos));
-  }
-  this.drivers.sort(function(a,b){ return a.pos - b.pos; });
-  this.drivers.forEach(function(d,i){ d.pos = i+1; });
-
-  this.bannerText = selected.feedback.text;
-  this.bannerPositive = selected.feedback.positive;
-  this.bannerPunishPct = Math.round(punishProb * 100);
+Race.prototype.applyChoice = function(choice) {
+  const branch = this.decision[choice];
+  const driver = this.drivers[branch.driver];
+  driver.pos = Math.max(1, Math.min(this.drivers.length, driver.pos + (branch.delta.pos || 0)));
+  this.drivers.sort(function(a, b) { return a.pos - b.pos; });
+  this.drivers.forEach(function(d, i) { d.pos = i + 1; });
+  this.bannerText  = branch.feedback.text;
   this.bannerTimer = millis() + 2000;
   this.decision = null;
 };
