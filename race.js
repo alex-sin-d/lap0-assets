@@ -80,8 +80,8 @@ var staticDecisions = [
       "Momentum boost for the next stint"
     ],
     yes: { driver: 0, random: [
-      { p: 0.7, delta: { pos: -2, tyreWear: 5 }, feedback: { text: "Clean pass! Gained 2 positions.", positive: true } },
-      { p: 0.3, delta: { pos: 4 }, feedback: { text: "Too tight—went wide and dropped 4 positions.", positive: false } }
+      { p: 0.64, delta: { pos: -2, tyreWear: 5 }, feedback: { text: "Clean pass! Gained 2 positions.", positive: true } },
+      { p: 0.36, delta: { pos: 4 }, feedback: { text: "Too tight—went wide and dropped 4 positions.", positive: false } }
     ] },
     no: { driver: 0, delta: {}, feedback: { text: "Held position safely.", positive: true } }
   },
@@ -94,9 +94,9 @@ var staticDecisions = [
       "DRS battery drained by 10%"
     ],
     yes: { driver: 0, random: [
-      { p: 0.7, delta: { pos: -1, battery: -10 }, feedback: { text: "Successful DRS pass!", positive: true } },
-      { p: 0.2, delta: { engine: -5 }, feedback: { text: "Wing clipped—top speed reduced.", positive: false } },
-      { p: 0.1, delta: {}, feedback: { text: "Missed the DRS window.", positive: false } }
+      { p: 0.58, delta: { pos: -1, battery: -10 }, feedback: { text: "Successful DRS pass!", positive: true } },
+      { p: 0.25, delta: { engine: -5 }, feedback: { text: "Wing clipped—top speed reduced.", positive: false } },
+      { p: 0.17, delta: {}, feedback: { text: "Missed the DRS window.", positive: false } }
     ] },
     no: { driver: 0, delta: { battery: 5 }, feedback: { text: "Conserved battery charge.", positive: true } }
   },
@@ -171,8 +171,8 @@ var staticDecisions = [
       "Alternatively, let the car through (-1 position)"
     ],
     yes: { driver: 0, random: [
-      { p: 0.4, delta: { tyreWear: 20 }, feedback: { text: "Locked up—tyres flat-spotted.", positive: false } },
-      { p: 0.6, delta: { pos: 1 }, feedback: { text: "Let through; tyres stayed clean.", positive: true } }
+      { p: 0.45, delta: { tyreWear: 20 }, feedback: { text: "Locked up—tyres flat-spotted.", positive: false } },
+      { p: 0.55, delta: { pos: 1 }, feedback: { text: "Let through; tyres stayed clean.", positive: true } }
     ] },
     no: { driver: 0, delta: {}, feedback: { text: "Defended conservatively.", positive: true } }
   },
@@ -234,7 +234,7 @@ var staticDecisions = [
       "15% puncture risk each lap"
     ],
     yes: { driver: 1, delta: { totalTime: 25 }, feedback: { text: "Pit stop; finished safely.", positive: true } },
-    no: { driver: 1, random: [ { p: 0.15, delta: { totalTime: Infinity }, feedback: { text: "Punctured—race over.", positive: false } } ] }
+    no: { driver: 1, random: [ { p: 1, delta: { totalTime: Infinity }, feedback: { text: "Punctured—race over.", positive: false } } ] }
   },
   {
     lap: 55,
@@ -254,9 +254,9 @@ var staticDecisions = [
       "15% crash risk (DNF)"
     ],
     yes: { driver: 0, random: [
-      { p: 0.4, delta: { pos: -1 }, feedback: { text: "Dive successful!", positive: true } },
-      { p: 0.15, delta: { totalTime: Infinity }, feedback: { text: "Crash—race over.", positive: false } },
-      { p: 0.45, delta: {}, feedback: { text: "Attempt failed; held position.", positive: false } }
+      { p: 0.33, delta: { pos: -1 }, feedback: { text: "Dive successful!", positive: true } },
+      { p: 0.21, delta: { totalTime: Infinity }, feedback: { text: "Crash—race over.", positive: false } },
+      { p: 0.46, delta: {}, feedback: { text: "Attempt failed; held position.", positive: false } }
     ] },
     no: { driver: 0, delta: {}, feedback: { text: "Held position safely.", positive: true } }
   },
@@ -268,8 +268,8 @@ var staticDecisions = [
       "25% engine blow-up risk"
     ],
     yes: { driver: 0, random: [
-      { p: 0.75, delta: {}, feedback: { text: "Aggressive finish—well done!", positive: true } },
-      { p: 0.25, delta: { totalTime: Infinity }, feedback: { text: "Engine blew—DNF!", positive: false } }
+      { p: 0.68, delta: {}, feedback: { text: "Aggressive finish—well done!", positive: true } },
+      { p: 0.32, delta: { totalTime: Infinity }, feedback: { text: "Engine blew—DNF!", positive: false } }
     ] },
     no: { driver: 0, delta: {}, feedback: { text: "Safe finish; engine intact.", positive: true } }
   }
@@ -335,15 +335,20 @@ Race.prototype.applyChoice=function(choice){
     if(typeof d[k]==='number' && typeof b.delta[k]==='number')d[k]+=b.delta[k];
     else d[k]=b.delta[k];
   }
-  if(b.random){var r=Math.random(),cum=0;for(var m=0;m<b.random.length;m++){cum+=b.random[m].p;if(r<cum){var rnd=b.random[m];for(k in rnd.delta){
-        if(typeof d[k]==='number' && typeof rnd.delta[k]==='number')d[k]+=rnd.delta[k];
-        else d[k]=rnd.delta[k];
-      }this.banner=rnd.feedback;break;}}}
+  var punishProb=b.random?b.random.filter(function(r){return r.feedback.positive===false;}).reduce(function(s,r){return s+r.p;},0):0;
+  var selected=b;
+  if(b.random){
+    var r=Math.random(),cum=0;for(var m=0;m<b.random.length;m++){cum+=b.random[m].p;if(r<cum){selected=b.random[m];break;}}
+    if(selected.delta)for(k in selected.delta){
+      if(typeof d[k]==='number' && typeof selected.delta[k]==='number')d[k]+=selected.delta[k];
+      else d[k]=selected.delta[k];
+    }
+  }
   if(b.extra)b.extra(d);
   if(typeof d.tyreWear==='number')d.tyreWear=Math.max(0,Math.min(100,d.tyreWear));
   if(typeof d.battery==='number')d.battery=Math.max(0,Math.min(100,d.battery));
   if(typeof d.engine==='number')d.engine=Math.max(0,Math.min(100,d.engine));
-  if(!b.random&&!b.extra)this.banner=b.feedback;
+  this.banner={text:selected.feedback.text,positive:selected.feedback.positive,punishProb:punishProb};
   this.decision=null; this.updatePositions();
 };
 
@@ -366,12 +371,16 @@ var HUD=(function(){
       textSize(18);fill(255);textAlign(RIGHT,TOP);
       text('Lap '+raceRef.lap+'/'+TOTAL_LAPS,width-20,10);
       if(raceRef.banner){
-        if(millis() < raceRef.bannerTimer){
-          var bw=300,bh=40,bx=width/2-bw/2,by=20;
-          fill(50,180);noStroke();
+        if(millis()<raceRef.bannerTimer){
+          var bw=400,bh=60,bx=(width-bw)/2,by=20;
+          fill(0,150);noStroke();
           rect(bx,by,bw,bh,8);
-          fill(255);textAlign(CENTER,CENTER);textSize(18);
-          text(raceRef.banner,bx+bw/2,by+bh/2);
+          textAlign(CENTER,CENTER);textSize(18);
+          fill(raceRef.banner.positive?255:color(255,0,0));
+          text(raceRef.banner.text,width/2,40);
+          fill(255);textSize(14);
+          var ch=floor(raceRef.banner.punishProb*100);
+          text('Punishment chance: '+ch+'%',width/2,58);
         }else{
           raceRef.banner=null;
         }
