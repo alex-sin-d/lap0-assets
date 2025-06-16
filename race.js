@@ -347,14 +347,44 @@ Race.prototype.tick = function() {
 };
 
 Race.prototype.applyChoice = function(choice) {
-  const branch = this.decision[choice];
-  const driver = this.drivers[branch.driver];
-  driver.pos = Math.max(1, Math.min(this.drivers.length, driver.pos + (branch.delta.pos || 0)));
-  this.drivers.sort(function(a, b) { return a.pos - b.pos; });
-  this.drivers.forEach(function(d, i) { d.pos = i + 1; });
-  this.bannerText  = branch.feedback.text;
-  this.bannerTimer = millis() + 2000;
-  this.decision = null;
+  var branch = this.decision[choice];
+
+  // Resolve random outcomes if present
+  if (branch.random) {
+    var r = Math.random();
+    var acc = 0;
+    for (var i = 0; i < branch.random.length; i++) {
+      acc += branch.random[i].p;
+      if (r <= acc) {
+        branch = branch.random[i];
+        break;
+      }
+    }
+  }
+
+  var driver = this.drivers[branch.driver];
+
+  // Apply delta values with simple clamping
+  var d = branch.delta || {};
+  if (d.time)       driver.totalTime += d.time;
+  if (d.totalTime === Infinity) driver.totalTime = Infinity;
+  if (d.pos)        driver.pos = Math.max(1, Math.min(this.drivers.length, driver.pos + d.pos));
+  if (d.tyre)       driver.tyre = d.tyre;
+  if (d.tyreWear)   driver.tyreWear = Math.max(0, driver.tyreWear + d.tyreWear);
+  if (d.battery)    driver.battery = Math.min(100, Math.max(0, driver.battery + d.battery));
+  if (d.engine)     driver.engine = Math.min(100, Math.max(0, driver.engine + d.engine));
+
+  // Extra callback
+  if (typeof branch.extra === 'function') branch.extra(driver);
+
+  // Re-sort by position and time
+  this.updatePositions();
+
+  // Feedback banner
+  this.bannerText     = branch.feedback.text;
+  this.bannerPositive = branch.feedback.positive !== false;
+  this.bannerTimer    = millis() + 2000;
+  this.decision       = null;
 };
 
 Race.prototype.updatePositions=function(){
