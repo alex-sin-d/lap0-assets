@@ -371,8 +371,8 @@ Race.prototype.applyChoice=function(choice){
     }
     d.pos = Math.max(1, Math.min(this.drivers.length, d.pos));
   }
-  this.drivers.sort(function(a,b){ return a.pos - b.pos; });
-  this.drivers.forEach(function(d,i){ d.pos = i+1; });
+  var ordered = this.drivers.slice().sort(function(a,b){ return a.pos - b.pos; });
+  for (i=0;i<ordered.length;i++) ordered[i].pos = i+1;
 
   this.bannerText = selected.feedback.text;
   this.bannerPositive = selected.feedback.positive;
@@ -382,8 +382,8 @@ Race.prototype.applyChoice=function(choice){
 };
 
 Race.prototype.updatePositions=function(){
-  this.drivers.sort(function(a,b){return a.totalTime-b.totalTime;});
-  for(var i=0;i<this.drivers.length;i++)this.drivers[i].pos=i+1;
+  var ordered = this.drivers.slice().sort(function(a,b){return a.totalTime-b.totalTime;});
+  for(var i=0;i<ordered.length;i++) ordered[i].pos = i+1;
 };
 
 Race.prototype.findDriver=function(name){for(var i=0;i<this.drivers.length;i++)if(this.drivers[i].name===name)return i;return-1;};
