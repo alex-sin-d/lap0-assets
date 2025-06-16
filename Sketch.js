@@ -11,6 +11,7 @@ let gmailIcon, strategyIcon;
 let mouseCursor;
 let backButton;
 let driverStrat, qualiStrat, weatherStrat;
+let happyResult, sadResult; // result screens
 
 // sounds
 let appClick, gmailClick, tabClick;
@@ -85,6 +86,8 @@ function preload() {
   driverStrat = loadImage("driver.png");
   qualiStrat = loadImage("quali.png");
   weatherStrat = loadImage("weather.png");
+  happyResult = loadImage("happyResult.webp");
+  sadResult = loadImage("sadResult.png");
 
   appClick = loadSound("appclick.wav");
   gmailClick = loadSound("gmailClick.wav");
@@ -154,10 +157,26 @@ function draw() {
     image(mouseCursor, mouseX, mouseY, 30, 30);
   } else if (gameState === "result") {
     const res = resultScenarios[race.strategyKey];
-    textSize(24);
-    fill(255);
-    text(`Pierre Gasly: P${res.gasly}`,        width/2, height/2 - 20);
-    text(`Franco Colapinto: P${res.colapinto}`, width/2, height/2 + 20);
+    const sad = res.gasly >= 7 || res.colapinto >= 10;
+    image(sad ? sadResult : happyResult, 0, 0, width, height);
+    textAlign(CENTER);
+    if (sad) {
+      fill(255);
+      textSize(24);
+      text(`Pierre Gasly: P${res.gasly}`, width / 2, height - 120);
+      text(`Franco Colapinto: P${res.colapinto}`, width / 2, height - 90);
+      fill(220);
+      textSize(18);
+      text(res.comment, width / 2, height - 50);
+    } else {
+      fill(255);
+      textSize(28);
+      text(`Pierre Gasly: P${res.gasly}`, width / 2, 100);
+      text(`Franco Colapinto: P${res.colapinto}`, width / 2, 130);
+      fill(255, 240);
+      textSize(18);
+      text(res.comment, width / 2, height - 80);
+    }
   }
 }
 
