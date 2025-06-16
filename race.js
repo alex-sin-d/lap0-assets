@@ -23,9 +23,6 @@ var TOTAL_LAPS = 58;
 var stintLen = { soft: 14, medium: 19, hard: 25 };
 
 // Custom starting grid positions
-var TOTAL_LAPS = 58;
-
-// Custom starting grid positions
 var STARTING_POSITIONS = {
   "PIERRE GASLY": 4,
   "FRANCO COLAPINTO": 9
